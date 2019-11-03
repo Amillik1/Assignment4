@@ -3,8 +3,12 @@ package com.example.app4;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Context;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.os.Bundle;
 import android.view.MotionEvent;
+import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
 import java.util.ArrayList;
@@ -25,9 +29,13 @@ public class MainActivity extends AppCompatActivity {
         int score = 0;
         int lives = 5;
         boolean running;
+        SurfaceHolder ourHolder;
+        Canvas canvas;
+        Paint paint;
 
         public TargetView(Context context){
             super(context);
+            ourHolder = getHolder();
         }
 
 
@@ -36,11 +44,21 @@ public class MainActivity extends AppCompatActivity {
             //move old targets
         }
         public void draw(){
-            //draw background
-            //draw lives
-            //draw score
-            for(Target i : targetArray){
-                i.draw();
+            if (ourHolder.getSurface().isValid()) {
+                canvas = ourHolder.lockCanvas();
+
+                //draw background
+                canvas.drawColor(Color.BLUE);
+
+                paint.setColor(Color.GREEN);
+                canvas.drawRect(0, 500, 800, 1000, paint);
+                //draw lives
+                //draw score
+                for (Target i : targetArray) {
+                    i.draw();
+                }
+
+                ourHolder.unlockCanvasAndPost(canvas);
             }
 
         }
@@ -61,6 +79,9 @@ public class MainActivity extends AppCompatActivity {
                 update();
                 draw();
                 //check if lost
+                if (lives == 0){
+                    //change window to leaderboard screen
+                }
             }
         }
 
@@ -70,6 +91,7 @@ public class MainActivity extends AppCompatActivity {
                 //if tap on a target
                     //breakTarget(target)
             }
+            return true;
         }
 
 

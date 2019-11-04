@@ -3,6 +3,7 @@ package com.example.app4;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -90,6 +91,8 @@ public class MainActivity extends AppCompatActivity {
             if(motionEvent.getAction() == MotionEvent.ACTION_DOWN){
                 //if tap on a target
                     //breakTarget(target)
+                Intent intent = new Intent(MainActivity.this, Activity2.class);
+                startActivity(intent);
             }
             return true;
         }

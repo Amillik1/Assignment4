@@ -8,20 +8,30 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
 import java.util.ArrayList;
+import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
     TargetView targetView;
+    int height;
+    int width;
+    int targetSize = 100;
+    Random rand = new Random();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         targetView = new TargetView(this);
         setContentView(targetView);
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+        height = displayMetrics.heightPixels;
+        width = displayMetrics.widthPixels;
     }
 
     class TargetView extends SurfaceView implements Runnable{
@@ -33,6 +43,15 @@ public class MainActivity extends AppCompatActivity {
         SurfaceHolder ourHolder;
         Canvas canvas;
         Paint paint;
+        Target currTarget;
+
+        //take 2
+        float tarX;
+        float tarY;
+        float speed = 10;
+        boolean horizontal = true;
+        boolean startLeftOrTop = true;
+        boolean exists = false;
 
         public TargetView(Context context){
             super(context);
@@ -42,8 +61,64 @@ public class MainActivity extends AppCompatActivity {
 
 
         public void update(){
-            //make new targets
-            //move old targets
+            if (exists){
+                //move old targets
+                if (horizontal){
+                    if (startLeftOrTop) {
+                        tarX += speed;
+                    }else{
+                        tarX -= speed;
+                    }
+                }else{
+                    if(startLeftOrTop) {
+                        tarY += speed;
+                    }else{
+                        tarY -= speed;
+                    }
+                }
+                if(tarX < 0 || tarY < 0 || tarX > width || tarY > height){
+                    lives -=1;
+                    if (lives != 0) {
+                        exists = false;
+                    }
+                }
+
+
+            }else{
+                //make new targets
+                exists = true;
+                if(rand.nextInt(2) == 0){
+                    horizontal = true;
+                }else{
+                    horizontal = false;
+                }
+                if(rand.nextInt(2)== 0){
+                    startLeftOrTop = true;
+                }else{
+                    startLeftOrTop = false;
+                }
+
+                if(horizontal && startLeftOrTop){
+                    //Starting at the left side
+                    tarX = 0;
+                    tarY = rand.nextInt(height);
+                }
+                if(!horizontal && startLeftOrTop){
+                    //Starting top
+                    tarY = 0;
+                    tarX = rand.nextInt(width);
+                }
+                if(horizontal && !startLeftOrTop){
+                    //starting right
+                    tarX = width;
+                    tarY = rand.nextInt(height);
+                }
+                if(!horizontal && !startLeftOrTop){
+                    tarY = height;
+                    tarX = rand.nextInt(width);
+                }
+                speed +=1;
+            }
         }
         public void draw(){
             if (ourHolder.getSurface().isValid()) {
@@ -52,34 +127,37 @@ public class MainActivity extends AppCompatActivity {
                 //draw background
                 canvas.drawColor(Color.BLUE);
 
-                paint.setColor(Color.GREEN);
-                canvas.drawRect(0, 500, 800, 1000, paint);
+                //paint.setColor(Color.GREEN);
+                //canvas.drawRect(0, 500, 800, 1000, paint);
                 //draw lives
-                paint.setColor(Color.BLACK);
+                paint.setColor(Color.GREEN);
                 paint.setTextSize(36);
                 String liveStr = "Lives: " + Integer.toString(lives);
                 canvas.drawText(liveStr, 15, 36, paint);
                 //draw score
                 String scoreStr = "Score: " + Integer.toString(score);
                 canvas.drawText(scoreStr, 15, 80, paint);
-                for (Target i : targetArray) {
+                /*for (Target i : targetArray) {
                     i.draw();
-                }
+                }*/
+
+                paint.setColor(Color.RED);
+                canvas.drawCircle(tarX, tarY, targetSize, paint);
 
                 ourHolder.unlockCanvasAndPost(canvas);
             }
 
         }
 
-        public void breakTarget(Target target){
+        /*public void breakTarget(Target target){
             score+=1;
-            targetArray.remove(target);
+            //targetArray.remove(target);
         }
 
         public void loseTarget(Target target){
             lives -=1;
             targetArray.remove(target);
-        }
+        }*/
 
         @Override
         public void run(){
@@ -89,6 +167,9 @@ public class MainActivity extends AppCompatActivity {
                 //check if lost
                 if (lives == 0){
                     //change window to leaderboard screen
+                    Intent intent = new Intent(MainActivity.this, ActivityTwo.class);
+                    intent.putExtra("Score", score);
+                    startActivity(intent);
                 }
 
                 try{
@@ -105,8 +186,12 @@ public class MainActivity extends AppCompatActivity {
             if(motionEvent.getAction() == MotionEvent.ACTION_DOWN){
                 //if tap on a target
                     //breakTarget(target)
-                Intent intent = new Intent(MainActivity.this, ActivityTwo.class);
-                startActivity(intent);
+
+                if(Math.hypot(Math.abs(motionEvent.getX() - tarX), Math.abs(motionEvent.getY() - tarY)) < targetSize){
+                    score +=1;
+                    exists = false;
+                }
+
             }
             return true;
         }
